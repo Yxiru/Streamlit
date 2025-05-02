@@ -1,76 +1,66 @@
-# dashboard.py
-import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-
-# Page setup
-st.set_page_config(page_title="Sri Lanka Humanitarian Funding Dashboard", layout="wide")
-
-# Title and intro
-st.title("Sri Lanka Humanitarian Funding Dashboard")
-st.markdown("Analyze sector-wise funding and requirements for Sri Lanka's 2022 humanitarian appeal.")
+import streamlit as st
 
 # Load data
-@st.cache_data
-def load_data():
-    df = pd.read_csv("cleaned_funding_data.csv")
-    return df
+df = pd.read_csv("cleaned_funding_data.csv")
 
-df = load_data()
+# Page config
+st.set_page_config(page_title="Sri Lanka Humanitarian Funding Dashboard", layout="wide")
 
-# Sidebar
-st.sidebar.header("Filter Data")
-
-# Sector filter
-sectors = df['Sector'].unique()
-selected_sector = st.sidebar.selectbox("Select Sector", options=["All"] + list(sectors))
-
-# Funding % slider
-percent_range = st.sidebar.slider("Filter by Funding %", 0.0, 500.0, (0.0, 150.0), step=5.0)
+# Sidebar filters
+st.sidebar.title("🔍 Filters")
+year_range = st.sidebar.slider("Select Year Range", int(df["year"].min()), int(df["year"].max()), (2002, 2022))
+sectors = df["Sector"].unique()
+selected_sectors = st.sidebar.multiselect("Select Sectors", options=sectors, default=list(sectors))
 
 # Apply filters
-filtered_df = df.copy()
-if selected_sector != "All":
-    filtered_df = filtered_df[filtered_df['Sector'] == selected_sector]
+filtered_df = df[(df["year"] >= year_range[0]) & (df["year"] <= year_range[1])]
+if selected_sectors:
+    filtered_df = filtered_df[filtered_df["Sector"].isin(selected_sectors)]
 
-filtered_df = filtered_df[
-    (filtered_df['Funding_Percent'] >= percent_range[0]) &
-    (filtered_df['Funding_Percent'] <= percent_range[1])
-]
+# Metrics
+total_required = filtered_df["Required_Funding_USD"].sum()
+total_received = filtered_df["Received_Funding_USD"].sum()
+funding_gap = total_required - total_received
+avg_funding_percent = filtered_df["Funding_Percent"].mean()
 
+# Header
+st.title("🇱🇰 Sri Lanka Humanitarian Funding Dashboard (2002–2022)")
+st.markdown("Analyze sector-wise funding trends and gaps for Sri Lanka’s humanitarian appeals. *Data Source: Humanitarian Response Plans*")
 
-st.subheader("Funding vs Requirements (USD)")
-fig1, ax1 = plt.subplots()
-ax1.bar(filtered_df['Sector'], filtered_df['Required_Funding_USD'], label="Requirements")
-ax1.bar(filtered_df['Sector'], filtered_df['Received_Funding_USD'], label="Funding")
-ax1.set_ylabel("USD")
-ax1.set_xticklabels(filtered_df['Sector'], rotation=45, ha='right')
-ax1.legend()
-st.pyplot(fig1)
+# Metrics display
+st.subheader("📊 Key Metrics")
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Total Required", f"${total_required / 1e6:,.1f}M")
+col2.metric("Total Received", f"${total_received / 1e6:,.1f}M")
+col3.metric("Funding Gap", f"${funding_gap / 1e6:,.1f}M", delta=f"{(funding_gap / total_required) * 100:.1f}%")
+col4.metric("Average Funding %", f"{avg_funding_percent:.1f}%")
 
+# Tabs
+tab1, tab2 = st.tabs(["📌 Sector Comparison", "📈 Time Trends"])
 
-st.subheader("📊 Funding vs Requirements by Sector (USD)")
+with tab1:
+    st.subheader("Funding Requirements vs Received by Sector")
+    sector_data = filtered_df.groupby("Sector")[["Required_Funding_USD", "Received_Funding_USD"]].sum().sort_values("Required_Funding_USD", ascending=False)
 
-# Sort and use filtered data
-plot_df = filtered_df.sort_values(by='Required_Funding_USD', ascending=False)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    sector_data.plot(kind='bar', ax=ax)
+    ax.set_ylabel("USD (Millions)")
+    ax.set_title("Funding Requirements vs Received by Sector")
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+    st.pyplot(fig)
 
-# Set bar positions
-x = np.arange(len(plot_df['Sector']))
-width = 0.35
+with tab2:
+    st.subheader("Trend of Total Funding Over the Years")
+    trend_data = filtered_df.groupby("year")[["Required_Funding_USD", "Received_Funding_USD"]].sum().reset_index()
 
-# Plot grouped bars
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.bar(x - width/2, plot_df['Required_Funding_USD'], width, label='Requirements', color='tomato')
-ax.bar(x + width/2, plot_df['Received_Funding_USD'], width, label='Funding', color='seagreen')
-
-# Format axes
-ax.set_ylabel("USD")
-ax.set_title("Funding vs Requirements by Sector")
-ax.set_xticks(x)
-ax.set_xticklabels(plot_df['Sector'], rotation=45, ha='right')
-ax.legend()
-ax.grid(axis='y', linestyle='--', alpha=0.5)
-
-# Show plot
-st.pyplot(fig)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(trend_data["year"], trend_data["Required_Funding_USD"], marker='o', label="Required Funding")
+    ax.plot(trend_data["year"], trend_data["Received_Funding_USD"], marker='o', label="Received Funding")
+    ax.set_title("Total Required vs Received Funding Over Time")
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Funding (USD)")
+    ax.legend()
+    ax.grid(True)
+    st.pyplot(fig)
