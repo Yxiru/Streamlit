@@ -11,12 +11,15 @@ st.set_page_config(page_title="Sri Lanka Humanitarian Funding Dashboard", layout
 # Sidebar filters
 st.sidebar.title("🔍 Filters")
 year_range = st.sidebar.slider("Select Year Range", int(df["year"].min()), int(df["year"].max()), (2002, 2022))
-sectors = df["Sector"].unique()
-selected_sectors = st.sidebar.multiselect("Select Sectors", options=sectors, default=list(sectors))
+# Create sector list with 'All' option
+sector_options = ["All"] + sorted(df["Sector"].unique().tolist())
+selected_sectors = st.sidebar.multiselect("Select Sectors", options=sector_options, default=["All"])
 
-# Apply filters
+# Filter by year range first
 filtered_df = df[(df["year"] >= year_range[0]) & (df["year"] <= year_range[1])]
-if selected_sectors:
+
+# Filter by selected sectors if 'All' is not selected
+if "All" not in selected_sectors:
     filtered_df = filtered_df[filtered_df["Sector"].isin(selected_sectors)]
 
 # Metrics
