@@ -129,6 +129,32 @@ with tab4:
     fig.update_traces(marker_color="indianred", texttemplate='%{text:.1f}', textposition='outside')
     st.plotly_chart(fig, use_container_width=True)
 
+# Detailed Data Table View
+st.subheader("📋 Detailed Data View")
+st.dataframe(
+    filtered_df.sort_values("Funding_Percent", ascending=False),
+    column_config={
+        "year": st.column_config.NumberColumn(format="%d"),
+        "Required_Funding_USD": st.column_config.NumberColumn(
+            "Required (M USD)",
+            format="$%.2f"
+        ),
+        "Received_Funding_USD": st.column_config.NumberColumn(
+            "Received (M USD)",
+            format="$%.2f"
+        ),
+        "Funding_Percent": st.column_config.ProgressColumn(
+            "Funding %",
+            format="%.1f%%",
+            min_value=0,
+            max_value=200
+        )
+    },
+    hide_index=True,
+    use_container_width=True
+)
+
+
     # Footer
 st.caption("""
 **Note:** All monetary values in millions USD.  
