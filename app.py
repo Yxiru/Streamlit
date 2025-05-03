@@ -1,5 +1,3 @@
-# Simplified Plotly version using clean structure similar to your Matplotlib approach
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -36,9 +34,44 @@ col3.metric("Funding Gap", f"${gap:,.1f}M", delta=f"{(gap / filtered_df['Require
 col4.metric("Average Funding %", f"{filtered_df['Funding_Percent'].mean():.1f}%")
 
 # Tabs
-tab1, tab2 = st.tabs(["\U0001F4CC Sector Comparison", "\U0001F4C8 Time Trends"])
+tab1, tab2, tab3 = st.tabs(["📊 Funding by Sector", "📌 Sector Comparison", "📈 Time Trends"])
 
 with tab1:
+    st.subheader("Funding by Sector")
+
+    sector_totals = filtered_df.groupby("Sector")[["Required_Funding_USD", "Received_Funding_USD"]].sum().reset_index()
+    sector_totals = sector_totals.sort_values("Required_Funding_USD", ascending=True)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        fig1 = px.bar(
+            sector_totals,
+            x="Required_Funding_USD",
+            y="Sector",
+            orientation="h",
+            title="Total Required Funding by Sector",
+            labels={"Required_Funding_USD": "Funding (Millions USD)", "Sector": "Sector"},
+            text_auto=".1f"
+        )
+        fig1.update_layout(height=600)
+        st.plotly_chart(fig1, use_container_width=True)
+
+    with col2:
+        fig2 = px.bar(
+            sector_totals,
+            x="Received_Funding_USD",
+            y="Sector",
+            orientation="h",
+            title="Total Received Funding by Sector",
+            labels={"Received_Funding_USD": "Funding (Millions USD)", "Sector": "Sector"},
+            text_auto=".1f"
+        )
+        fig2.update_layout(height=600)
+        st.plotly_chart(fig2, use_container_width=True)
+
+
+with tab2:
     st.subheader("Funding Requirements vs Received by Sector")
     bar_df = filtered_df.groupby("Sector")[["Required_Funding_USD", "Received_Funding_USD"]].sum().reset_index()
     bar_df = bar_df.sort_values("Required_Funding_USD", ascending=False)
@@ -56,7 +89,7 @@ with tab1:
     fig.update_layout(xaxis_tickangle=-45, height=500)
     st.plotly_chart(fig, use_container_width=True)
 
-with tab2:
+with tab3:
     st.subheader("Total Funding Over the Years")
     trend_df = filtered_df.groupby("year")[["Required_Funding_USD", "Received_Funding_USD"]].sum().reset_index()
 
