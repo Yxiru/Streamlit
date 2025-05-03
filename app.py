@@ -34,8 +34,13 @@ col3.metric("Funding Gap", f"${gap:,.1f}M", delta=f"{(gap / filtered_df['Require
 col4.metric("Average Funding %", f"{filtered_df['Funding_Percent'].mean():.1f}%")
 
 # Tabs
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Funding by Sector", "📌 Sector Comparison", "📈 Time Trends", "📉 Funding Gap"])
-
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "📊 Funding by Sector",
+    "📌 Sector Comparison",
+    "📈 Time Trends",
+    "📉 Funding Gap",
+    "⚖️ Funding Efficiency"
+])
 
 with tab1:
     st.subheader("Funding by Sector")
@@ -128,6 +133,28 @@ with tab4:
     )
     fig.update_traces(marker_color="indianred", texttemplate='%{text:.1f}', textposition='outside')
     st.plotly_chart(fig, use_container_width=True)
+
+with tab5:
+    st.subheader("Funding Efficiency by Sector")
+
+    # Compute efficiency
+    efficiency_df = filtered_df.groupby("Sector")[["Required_Funding_USD", "Received_Funding_USD"]].sum().reset_index()
+    efficiency_df["Funding_Percent"] = (efficiency_df["Received_Funding_USD"] / efficiency_df["Required_Funding_USD"]) * 100
+    efficiency_df = efficiency_df.sort_values("Funding_Percent", ascending=False)
+
+    # Plot
+    fig = px.bar(
+        efficiency_df,
+        x="Funding_Percent",
+        y="Sector",
+        orientation="h",
+        text="Funding_Percent",
+        labels={"Funding_Percent": "Funding Efficiency (%)"},
+        title="Funding Efficiency by Sector"
+    )
+    fig.update_traces(marker_color="seagreen", texttemplate='%{text:.1f}%', textposition='outside')
+    st.plotly_chart(fig, use_container_width=True)
+
 
 # Detailed Data Table View
 st.subheader("📋 Detailed Data View")
