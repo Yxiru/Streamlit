@@ -2,26 +2,26 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# Page configuration
+# Page config
 st.set_page_config(page_title="Sri Lanka Humanitarian Funding Dashboard", layout="wide")
 
-# Load data (simple direct import like matplotlib version)
+# Load data
 df = pd.read_csv("cleaned_funding_data.csv")
 df["Required_Funding_USD"] /= 1e6
 df["Received_Funding_USD"] /= 1e6
 
-# Sidebar filters
+# Setting the Sidebar filters
 st.sidebar.title("\U0001F50D Filters")
 year_range = st.sidebar.slider("Select Year Range", int(df["year"].min()), int(df["year"].max()), (2002, 2022))
 sector_options = ["All"] + sorted(df["Sector"].unique().tolist())
 selected_sectors = st.sidebar.multiselect("Select Sectors", options=sector_options, default=["All"])
 
-# Filter data
+# Data Filters
 filtered_df = df[(df["year"] >= year_range[0]) & (df["year"] <= year_range[1])]
 if "All" not in selected_sectors:
     filtered_df = filtered_df[filtered_df["Sector"].isin(selected_sectors)]
 
-# Metrics
+# Key Metrics
 st.title("\U0001F1F1\U0001F1F0 Sri Lanka Humanitarian Funding Dashboard (2002–2022)")
 st.markdown("Analyze sector-wise funding trends and gaps for Sri Lanka's humanitarian appeals. *Data Source: Humanitarian Response Plans*")
 
@@ -34,7 +34,8 @@ col3.metric("Funding Gap", f"${gap:,.1f}M", delta=f"{(gap / filtered_df['Require
 col4.metric("Average Funding %", f"{filtered_df['Funding_Percent'].mean():.1f}%")
 
 # Tabs
-tab1, tab2, tab3 = st.tabs(["📊 Funding by Sector", "📌 Sector Comparison", "📈 Time Trends"])
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Funding by Sector", "📌 Sector Comparison", "📈 Time Trends", "📉 Funding Gap"])
+
 
 with tab1:
     st.subheader("Funding by Sector")
@@ -108,4 +109,22 @@ with tab3:
         title="Funding Trends Over Time"
     )
     fig.update_traces(line_width=2)
+    st.plotly_chart(fig, use_container_width=True)
+
+with tab4:
+    st.subheader("Funding Gap by Sector")
+    gap_df = filtered_df.groupby("Sector")[["Required_Funding_USD", "Received_Funding_USD"]].sum().reset_index()
+    gap_df["Funding_Gap"] = gap_df["Required_Funding_USD"] - gap_df["Received_Funding_USD"]
+    gap_df = gap_df.sort_values("Funding_Gap", ascending=False)
+
+    fig = px.bar(
+        gap_df,
+        x="Funding_Gap",
+        y="Sector",
+        orientation="h",
+        text="Funding_Gap",
+        labels={"Funding_Gap": "Gap (Millions USD)"},
+        title="Funding Gap by Sector"
+    )
+    fig.update_traces(marker_color="indianred", texttemplate='%{text:.1f}', textposition='outside')
     st.plotly_chart(fig, use_container_width=True)
