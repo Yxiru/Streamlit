@@ -128,3 +128,9 @@ with tab4:
     )
     fig.update_traces(marker_color="indianred", texttemplate='%{text:.1f}', textposition='outside')
     st.plotly_chart(fig, use_container_width=True)
+
+    # Footer
+st.caption("""
+**Note:** All monetary values in millions USD.  
+Data covers humanitarian appeals from 2002-2022.
+""")
