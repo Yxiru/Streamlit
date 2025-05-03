@@ -39,36 +39,41 @@ tab1, tab2, tab3 = st.tabs(["📊 Funding by Sector", "📌 Sector Comparison", 
 with tab1:
     st.subheader("Funding by Sector")
 
-    sector_totals = filtered_df.groupby("Sector")[["Required_Funding_USD", "Received_Funding_USD"]].sum().reset_index()
-    sector_totals = sector_totals.sort_values("Required_Funding_USD", ascending=True)
+    # Group by sector
+    sector_grouped = filtered_df.groupby("Sector")[["Required_Funding_USD", "Received_Funding_USD"]].sum().reset_index()
 
+    # Left: Required Funding (sorted independently)
+    required_sorted = sector_grouped.sort_values("Required_Funding_USD", ascending=True)
+    fig1 = px.bar(
+        required_sorted,
+        x="Required_Funding_USD",
+        y="Sector",
+        orientation='h',
+        text="Required_Funding_USD",
+        labels={"Required_Funding_USD": "Funding (Millions USD)"},
+        title="Total Required Funding by Sector"
+    )
+    fig1.update_traces(marker_color="skyblue", texttemplate='%{text:.1f}', textposition='outside')
+    fig1.update_layout(yaxis=dict(categoryorder='total ascending'))
+
+    # Right: Received Funding (sorted independently)
+    received_sorted = sector_grouped.sort_values("Received_Funding_USD", ascending=True)
+    fig2 = px.bar(
+        received_sorted,
+        x="Received_Funding_USD",
+        y="Sector",
+        orientation='h',
+        text="Received_Funding_USD",
+        labels={"Received_Funding_USD": "Funding (Millions USD)"},
+        title="Total Received Funding by Sector"
+    )
+    fig2.update_traces(marker_color="lightskyblue", texttemplate='%{text:.1f}', textposition='outside')
+    fig2.update_layout(yaxis=dict(categoryorder='total ascending'))
+
+    # Show side-by-side
     col1, col2 = st.columns(2)
-
-    with col1:
-        fig1 = px.bar(
-            sector_totals,
-            x="Required_Funding_USD",
-            y="Sector",
-            orientation="h",
-            title="Total Required Funding by Sector",
-            labels={"Required_Funding_USD": "Funding (Millions USD)", "Sector": "Sector"},
-            text_auto=".1f"
-        )
-        fig1.update_layout(height=600)
-        st.plotly_chart(fig1, use_container_width=True)
-
-    with col2:
-        fig2 = px.bar(
-            sector_totals,
-            x="Received_Funding_USD",
-            y="Sector",
-            orientation="h",
-            title="Total Received Funding by Sector",
-            labels={"Received_Funding_USD": "Funding (Millions USD)", "Sector": "Sector"},
-            text_auto=".1f"
-        )
-        fig2.update_layout(height=600)
-        st.plotly_chart(fig2, use_container_width=True)
+    col1.plotly_chart(fig1, use_container_width=True)
+    col2.plotly_chart(fig2, use_container_width=True)
 
 
 with tab2:
