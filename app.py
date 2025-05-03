@@ -22,7 +22,7 @@ if "All" not in selected_sectors:
     filtered_df = filtered_df[filtered_df["Sector"].isin(selected_sectors)]
 
 # Key Metrics
-st.title("\U0001F1F1\U0001F1F0 Sri Lanka Humanitarian Funding Dashboard (2002–2022)")
+st.title("Sri Lanka Humanitarian Funding Dashboard (2002–2022)")
 st.markdown("Analyze sector-wise funding trends and gaps for Sri Lanka's humanitarian appeals. *Data Source: Humanitarian Response Plans*")
 
 st.subheader("\U0001F4CA Key Metrics")
