@@ -222,6 +222,16 @@ st.dataframe(
     use_container_width=True
 )
 
+# CSV Download Button
+csv = filtered_df.to_csv(index=False).encode('utf-8')
+st.download_button(
+    label="⬇️ Download Filtered Data as CSV",
+    data=csv,
+    file_name='filtered_funding_data.csv',
+    mime='text/csv'
+)
+
+
 
     # Footer
 st.caption("""
