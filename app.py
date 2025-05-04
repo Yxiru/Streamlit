@@ -158,20 +158,43 @@ with tab5:
     st.plotly_chart(fig, use_container_width=True)
 
 with tab6:
-    st.subheader("Sector Share of Total Received Funding")
+    st.subheader("Sector Share of Total Funding")
 
-    pie_df = filtered_df.groupby("Sector")["Received_Funding_USD"].sum().reset_index()
-    pie_df = pie_df[pie_df["Received_Funding_USD"] > 0]  # Remove sectors with zero funding
-
-    fig = px.pie(
-        pie_df,
-        names="Sector",
-        values="Received_Funding_USD",
-        title="Proportional Share of Received Funding by Sector",
-        hole=0.4  # Donut-style
+    #Adding the radio button for selecting data type
+    funding_type = st.radio(
+        "Select Funding Type to Display:",
+        options=["Received Funding", "Required Funding"],
+        index=0,
+        horizontal=True
     )
+
+    # Group data
+    pie_df = filtered_df.groupby("Sector")[["Required_Funding_USD", "Received_Funding_USD"]].sum().reset_index()
+    pie_df = pie_df[(pie_df["Received_Funding_USD"] > 0) | (pie_df["Required_Funding_USD"] > 0)]
+
+    # Plot based on selection
+    if funding_type == "Received Funding":
+        fig = px.pie(
+            pie_df,
+            names="Sector",
+            values="Received_Funding_USD",
+            title="Proportional Share of Received Funding by Sector",
+            hole=0.4,
+            height=600
+        )
+    else:
+        fig = px.pie(
+            pie_df,
+            names="Sector",
+            values="Required_Funding_USD",
+            title="Proportional Share of Required Funding by Sector",
+            hole=0.4,
+            height=600
+        )
+
     fig.update_traces(textposition='inside', textinfo='percent+label')
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 # Detailed Data Table View
