@@ -6,6 +6,16 @@ import base64
 # Page config
 st.set_page_config(page_title="Sri Lanka Humanitarian Funding Dashboard", layout="wide")
 
+#setting the sidebar color
+st.markdown("""
+    <style>
+    [data-testid="stSidebar"] {
+        background-color: #1a233a;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+
 #setting a background image 
 
 def set_background(image_path):
