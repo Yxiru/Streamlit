@@ -34,13 +34,15 @@ col3.metric("Funding Gap", f"${gap:,.1f}M", delta=f"{(gap / filtered_df['Require
 col4.metric("Average Funding %", f"{filtered_df['Funding_Percent'].mean():.1f}%")
 
 # Tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📊 Funding by Sector",
     "📌 Sector Comparison",
     "📈 Time Trends",
     "📉 Funding Gap",
-    "⚖️ Funding Efficiency"
+    "⚖️ Funding Efficiency",
+    "🥧 Sector Funding Share"
 ])
+
 
 with tab1:
     st.subheader("Funding by Sector")
@@ -153,6 +155,22 @@ with tab5:
         title="Funding Efficiency by Sector"
     )
     fig.update_traces(marker_color="seagreen", texttemplate='%{text:.1f}%', textposition='outside')
+    st.plotly_chart(fig, use_container_width=True)
+
+with tab6:
+    st.subheader("Sector Share of Total Received Funding")
+
+    pie_df = filtered_df.groupby("Sector")["Received_Funding_USD"].sum().reset_index()
+    pie_df = pie_df[pie_df["Received_Funding_USD"] > 0]  # Remove sectors with zero funding
+
+    fig = px.pie(
+        pie_df,
+        names="Sector",
+        values="Received_Funding_USD",
+        title="Proportional Share of Received Funding by Sector",
+        hole=0.4  # Donut-style
+    )
+    fig.update_traces(textposition='inside', textinfo='percent+label')
     st.plotly_chart(fig, use_container_width=True)
 
 
