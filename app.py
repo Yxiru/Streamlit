@@ -103,8 +103,12 @@ with tab2:
     st.plotly_chart(fig, use_container_width=True)
 
 with tab3:
-    st.subheader("Total Funding Over the Years")
-    trend_df = filtered_df.groupby("year")[["Required_Funding_USD", "Received_Funding_USD"]].sum().reset_index()
+    st.subheader("Funding Trends Over Time")
+
+    selected_sector_for_trend = st.selectbox("Select a Sector to View Trend", options=sorted(filtered_df['Sector'].unique()))
+
+    trend_sector_df = filtered_df[filtered_df["Sector"] == selected_sector_for_trend]
+    trend_df = trend_sector_df.groupby("year")[["Required_Funding_USD", "Received_Funding_USD"]].sum().reset_index()
 
     fig = px.line(
         trend_df.melt(id_vars="year"),
@@ -113,10 +117,11 @@ with tab3:
         color="variable",
         markers=True,
         labels={"value": "USD (Millions)", "variable": ""},
-        title="Funding Trends Over Time"
+        title=f"Funding Trend Over Time: {selected_sector_for_trend}"
     )
     fig.update_traces(line_width=2)
     st.plotly_chart(fig, use_container_width=True)
+
 
 with tab4:
     st.subheader("Funding Gap by Sector")
